@@ -1,18 +1,17 @@
 # gradle-cache-warmer
 
-Run once on each lab machine **with internet** (Gradle 9.0.0, OpenJDK 25.0.3):
+Fills `~/.gradle` so Gradle 9.0.0 / OpenJDK 25.0.3 / JUnit 5 work **offline** (exam).
 
-    ./warm-cache.sh
+| Dir / script      | Purpose |
+|-------------------|---------|
+| `warmer/`         | Bigger project (streams, java.time, nio, records/sealed, Swing, many JUnit 5 features, jacoco, javadoc) that downloads everything. |
+| `tester/`         | Independent "student-style" project, used only to verify the cache. |
+| `./warm-cache.sh` | Run once per machine **with internet**. Builds `warmer/`, then rebuilds it `--offline`. |
+| `./test-cache.sh` | Copies `tester/` to a fresh temp dir and builds it with `--offline`. Prints PASS/FAIL. Run after warming (or in the exam room, with internet off). |
 
-It builds a Kotlin-DSL project with JUnit 5 (Jupiter, incl. params) and fills `~/.gradle`.
-During the exam (no internet) use `gradle --offline test` (or just `gradle test`;
-cached dependencies are used without network, but `--offline` avoids slow timeouts).
+Swing tests that need a display are skipped automatically on headless machines.
 
-Important:
-- Exam projects must use the **same dependency versions** as `build.gradle.kts`
-  (`junit-bom:5.13.4`, launcher via BOM). Different versions = not cached.
-- Only the same user's `~/.gradle` is used; warm it as the account students log in with
-  (or copy the filled `~/.gradle` to every account/image).
-- Don't use `gradle clean`-style cache wipes or `~/.gradle` cleanup scripts between warm-up and exam.
-- Plugins other than `java`, `application`, `jacoco` are not cached; add any others
-  you use (checkstyle, pmd, ...) to `build.gradle.kts` and run the relevant tasks in `warm-cache.sh`.
+Notes:
+- Exam projects must use the same dependency versions (`junit-bom:5.13.4`); other versions are not cached.
+- The cache is per user: run as the account students use, or copy `~/.gradle` to every account.
+- Plugins not used here (checkstyle, pmd, Kotlin plugin, ...) are not cached; add them to `warmer/build.gradle.kts`.

@@ -27,6 +27,10 @@ application {
     mainClass = "warmup.Main"
 }
 
+tasks.named<JavaExec>("run") {
+    args("--no-gui")
+}
+
 tasks.test {
     useJUnitPlatform()
     testLogging {
