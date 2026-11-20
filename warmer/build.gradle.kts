@@ -41,3 +41,8 @@ tasks.test {
 tasks.jacocoTestReport {
     dependsOn(tasks.test)
 }
+
+// Sample code has no Javadoc comments; silence the "no comment" warnings.
+tasks.javadoc {
+    (options as StandardJavadocDocletOptions).addStringOption("Xdoclint:-missing", "-quiet")
+}
