@@ -24,9 +24,14 @@ echo "== Check B: plain gradle init (nothing copied), offline build, test, run"
 new_project "$TMP/plain" plain app "" plain
 ( cd "$TMP/plain" && gradle --offline build && gradle --offline test --rerun && gradle --offline run ) || ok=0
 
+echo "== Check C: project pinned to Gradle $PIN_GRADLE (like a zip from the professor), offline ./gradlew and gradle"
+new_project "$TMP/pinned" pinned app "$HERE/sources/tester/src"
+sed -i "s#gradle-[0-9.]*-bin.zip#gradle-$PIN_GRADLE-bin.zip#" "$TMP/pinned/gradle/wrapper/gradle-wrapper.properties"
+( cd "$TMP/pinned" && ./gradlew --offline build && gradle --offline clean build ) || ok=0
+
 if [ "$ok" = 1 ]; then
     echo; echo "=============================================="
-    echo " STEP 2 PASSED: offline builds work (checks A and B). Cache is good."
+    echo " STEP 2 PASSED: offline builds work (checks A, B and C). Cache is good."
     echo " >>> Now turn the internet ON again (normal lab use / next machine)."
     echo "=============================================="
 else

@@ -27,9 +27,16 @@ echo "== Warming: library project (gradle init)"
 new_project "$TMP/warm-lib" warm-lib lib ""
 ( cd "$TMP/warm-lib" && gradle build javadoc )
 
+echo "== Warming: wrapper pinned to $PIN_GRADLE (for projects made on a $PIN_GRADLE machine)"
+new_project "$TMP/warm-pinned" warm-pinned app "$HERE/sources/tester/src"
+( cd "$TMP/warm-pinned"
+  gradle wrapper --gradle-version "$PIN_GRADLE"
+  ./gradlew build )
+
 echo "== Re-checking offline"
 ( cd "$TMP/warm-app" && gradle --offline clean build jacocoTestReport javadoc )
 ( cd "$TMP/warm-lib" && gradle --offline clean build )
+( cd "$TMP/warm-pinned" && ./gradlew --offline clean build )
 
 echo
 echo "=============================================="

@@ -2,6 +2,9 @@
 # Uses THIS machine's gradle and java, so the cache matches what students get
 # from `gradle init` here.
 
+# Gradle version the exam projects are made with (wrapper pinned to this).
+PIN_GRADLE=9.0.0
+
 check_tools() {
     command -v gradle >/dev/null || { echo "gradle not on PATH" >&2; exit 1; }
     command -v java   >/dev/null || { echo "java not on PATH" >&2; exit 1; }
