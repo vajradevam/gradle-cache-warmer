@@ -1,16 +1,19 @@
 #!/usr/bin/env bash
-# Verifies the cache: copies ./tester to a fresh temp dir (no build state, no
-# .gradle dir) and builds it with --offline. Run after warm-cache.sh.
-# Safe to run with internet on or off; --offline forbids Gradle from using it.
+# Verifies the cache: generates a brand-new project with `gradle init` in a temp
+# dir, overlays the tester sources, and builds it with --offline (via both
+# `gradle` and `./gradlew`). Prints PASS/FAIL. Run after warm-cache.sh.
 set -euo pipefail
-SRC="$(cd "$(dirname "$0")" && pwd)/tester"
-TMP="$(mktemp -d)"
-trap 'rm -rf "$TMP"' EXIT
-cp -r "$SRC"/. "$TMP"/
-cd "$TMP"
+HERE="$(cd "$(dirname "$0")" && pwd)"
+source "$HERE/common.sh"
+check_tools
 
-if gradle --no-daemon --offline clean build; then
-    echo; echo "PASS: offline build works. Cache is good."
+TMP="$(mktemp -d)"
+trap 'gradle --stop >/dev/null 2>&1 || true; rm -rf "$TMP"' EXIT
+
+new_project "$TMP/exam-sim" exam-sim app "$HERE/sources/tester/src"
+cd "$TMP/exam-sim"
+if gradle --offline clean build && ./gradlew --offline clean build; then
+    echo; echo "PASS: offline builds work (gradle and ./gradlew). Cache is good."
 else
     echo; echo "FAIL: offline build failed. Re-run ./warm-cache.sh with internet." >&2
     exit 1

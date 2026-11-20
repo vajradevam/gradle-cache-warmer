@@ -2,6 +2,7 @@ package warmup;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.DisplayName;
@@ -58,5 +59,12 @@ class TextStatsTest {
     @MethodSource("longest")
     void longestWord(String text, String expected) {
         assertEquals(expected, TextStats.longestWord(text).orElseThrow());
+    }
+
+    @Test
+    void chunksUsesGuava() {
+        assertEquals(
+                List.of(List.of("a", "b"), List.of("c")),
+                TextStats.chunks(List.of("a", "b", "c"), 2));
     }
 }
