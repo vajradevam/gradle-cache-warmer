@@ -10,10 +10,11 @@ check_tools() {
     JAVA_MAJOR="$(java -version 2>&1 | sed -n '1s/.*"\([0-9]*\)[."].*/\1/p')"
 }
 
-# new_project <dir> <name> <app|lib> <sources-dir or "">
+# new_project <dir> <name> <app|lib> <sources-dir or ""> [plain]
+# With a 5th argument "plain", the generated project is left completely untouched.
 # Runs `gradle init` exactly like a student would, then overlays our sources.
 new_project() {
-    local dir="$1" name="$2" kind="$3" src="$4" type sub
+    local dir="$1" name="$2" kind="$3" src="$4" plain="${5:-}" type sub
     if [ "$kind" = app ]; then type=java-application; sub=app; else type=java-library; sub=lib; fi
     mkdir -p "$dir"
     ( cd "$dir" && gradle init --type "$type" --dsl kotlin --test-framework junit-jupiter \
@@ -22,6 +23,7 @@ new_project() {
     if [ -n "$src" ]; then
         cp -r "$src"/. "$dir/$sub/src/"
     fi
+    [ -n "$plain" ] && return 0
     cat >> "$dir/$sub/build.gradle.kts" <<'EOK'
 
 apply(plugin = "jacoco")

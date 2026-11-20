@@ -14,11 +14,19 @@ fi
 TMP="$(mktemp -d)"
 trap 'gradle --stop >/dev/null 2>&1 || true; rm -rf "$TMP"' EXIT
 
+ok=1
+
+echo "== Check A: gradle init + tester sources, offline build with gradle and ./gradlew"
 new_project "$TMP/exam-sim" exam-sim app "$HERE/sources/tester/src"
-cd "$TMP/exam-sim"
-if gradle --offline clean build && ./gradlew --offline clean build; then
+( cd "$TMP/exam-sim" && gradle --offline clean build && ./gradlew --offline clean build ) || ok=0
+
+echo "== Check B: plain gradle init (nothing copied), offline build, test, run"
+new_project "$TMP/plain" plain app "" plain
+( cd "$TMP/plain" && gradle --offline build && gradle --offline test --rerun && gradle --offline run ) || ok=0
+
+if [ "$ok" = 1 ]; then
     echo; echo "=============================================="
-    echo " STEP 2 PASSED: offline builds work (gradle and ./gradlew). Cache is good."
+    echo " STEP 2 PASSED: offline builds work (checks A and B). Cache is good."
     echo " >>> Now turn the internet ON again (normal lab use / next machine)."
     echo "=============================================="
 else
