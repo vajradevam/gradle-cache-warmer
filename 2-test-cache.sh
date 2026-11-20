@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+# STEP 2 of 2. Turn internet OFF first (checked below). Verifies the cache: generates a brand-new project with `gradle init` in a temp
+# dir, overlays the tester sources, and builds it with --offline (via both
+# `gradle` and `./gradlew`). Prints PASS/FAIL. Run after warm-cache.sh.
+set -euo pipefail
+HERE="$(cd "$(dirname "$0")" && pwd)"
+source "$HERE/common.sh"
+check_tools
+
+if curl -fsS -o /dev/null --max-time 5 https://repo.maven.apache.org/maven2/ 2>/dev/null; then
+    echo "NOTE: internet still looks ON. Builds below use --offline anyway, but turn it OFF for a real test."
+fi
+
+TMP="$(mktemp -d)"
+trap 'gradle --stop >/dev/null 2>&1 || true; rm -rf "$TMP"' EXIT
+
+new_project "$TMP/exam-sim" exam-sim app "$HERE/sources/tester/src"
+cd "$TMP/exam-sim"
+if gradle --offline clean build && ./gradlew --offline clean build; then
+    echo; echo "=============================================="
+    echo " STEP 2 PASSED: offline builds work (gradle and ./gradlew). Cache is good."
+    echo " >>> Now turn the internet ON again (normal lab use / next machine)."
+    echo "=============================================="
+else
+    echo; echo "FAIL: offline build failed. Turn internet ON and re-run ./1-warm-cache.sh, then OFF and ./2-test-cache.sh again." >&2
+    exit 1
+fi
