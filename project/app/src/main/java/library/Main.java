@@ -89,9 +89,21 @@ public class Main {
         System.out.println("Application closed.");
     }
 
+    /** Members are not editable in the GUI, so make sure a few exist. */
+    static void addSampleMembers(LibraryManager manager) {
+        manager.addMember(new Member("M001", "Asha Rao", "asha@example.com", "9000000001"));
+        manager.addMember(new Member("M002", "Ravi Kumar", "ravi@example.com", "9000000002"));
+        manager.addMember(new Member("M003", "Meera Nair", "meera@example.com", "9000000003"));
+    }
+
     private static void addSampleResources(LibraryManager manager) {
-        // TODO: Add sample Book, Magazine and Journal objects.
-        // Also add at least one sample Member.
-        System.out.println("Implement sample data creation here.");
+        manager.addItem(new Book("B101", "Introduction to Java", "Pearson", 2020,
+                "James Gosling", "978-0-00-000001-1"));
+        manager.addItem(new Magazine("M201", "Science Today", "Science Media", 2024,
+                11, "November"));
+        manager.addItem(new Journal("J301", "Journal of Computing", "ACM", 2023,
+                5, "Computer Science"));
+        addSampleMembers(manager);
+        System.out.println("Sample resources and members added.");
     }
 }

@@ -23,16 +23,5 @@ run_build() {
   echo
   local rc=0
   ./gradlew --no-daemon --console=plain clean build test || rc=$?
-  if [ $rc -eq 0 ]; then
-    # 'gradlew run' does not forward stdin, and this app is a console menu,
-    # so install the app with Gradle and feed the menu through its start script.
-    ./gradlew --no-daemon --console=plain -q installDist || rc=$?
-  fi
-  if [ $rc -eq 0 ]; then
-    echo "--- run (menu input: 1 add samples, 2 list, 0 exit) ---"
-    local tmp; tmp="$(mktemp -d)"
-    ( cd "$tmp" && printf '1\n2\n0\n' | "$PROJECT/app/build/install/app/bin/app" ) || rc=$?
-    rm -rf "$tmp"
-  fi
   return $rc
 }

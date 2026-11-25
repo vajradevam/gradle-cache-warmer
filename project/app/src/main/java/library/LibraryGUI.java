@@ -124,8 +124,14 @@ public class LibraryGUI extends JFrame {
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
-            // Replace DemoLibraryController with new LibraryManagerAdapter(new LibraryManager()).
-            LibraryGUI gui = new LibraryGUI(new DemoLibraryController());
+            LibraryManager manager = new LibraryManager();
+            try {
+                manager.loadAll();
+            } catch (Exception e) {
+                System.out.println("Could not load saved data: " + e.getMessage());
+            }
+            Main.addSampleMembers(manager);
+            LibraryGUI gui = new LibraryGUI(new LibraryManagerAdapter(manager));
             gui.setVisible(true);
         });
     }

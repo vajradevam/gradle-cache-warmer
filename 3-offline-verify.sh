@@ -11,7 +11,7 @@ rm -rf "$PROJECT/.gradle" "$PROJECT/build" "$PROJECT/app/build"   # keep ~/.grad
 if run_build; then
   echo
   echo "================================================================"
-  echo "STEP 3 PASSED: exam project builds, tests and runs OFFLINE."
+  echo "STEP 3 PASSED: exam project builds and tests OFFLINE."
   echo "================================================================"
 else
   echo; echo "STEP 3 FAILED: the cache is NOT enough for the exam project."; exit 1

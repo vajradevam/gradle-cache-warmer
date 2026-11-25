@@ -1,0 +1,126 @@
+##### E2E RUN Thursday 26 November 2026 02:06:35 AM IST | isolated GRADLE_USER_HOME, offline steps in no-network namespace
+
+##### STEP 1 (offline)
+=== STEP 1 (internet OFF, empty cache) ===
+Will DELETE: /tmp/claude-1000/-home-apathak-kiss-cc-oop/91326bb5-d868-43c4-bbaf-9bcb443db8e6/scratchpad/gh  and  /home/apathak/kiss/cc-oop/gradle-cache-warmer/project/.gradle  /home/apathak/kiss/cc-oop/gradle-cache-warmer/project/build
+Cache deleted.
+Java:   openjdk version "25.0.5.1" 2026-11-17
+Gradle: 9.0.0 (from the project's wrapper)
+Internet detected: OFF
+
+Downloading https://services.gradle.org/distributions/gradle-9.0.0-bin.zip
+
+Exception in thread "main" java.net.UnknownHostException: services.gradle.org
+	at java.base/sun.nio.ch.NioSocketImpl.connect(NioSocketImpl.java:569)
+	at java.base/java.net.SocksSocketImpl.connect(SocksSocketImpl.java:307)
+	at java.base/java.net.Socket.connect(Socket.java:659)
+	at java.base/sun.security.ssl.SSLSocketImpl.connect(SSLSocketImpl.java:304)
+	at java.base/sun.net.NetworkClient.doConnect(NetworkClient.java:161)
+	at java.base/sun.net.www.http.HttpClient.openServer(HttpClient.java:524)
+	at java.base/sun.net.www.http.HttpClient.openServer(HttpClient.java:612)
+	at java.base/sun.net.www.protocol.https.HttpsClient.<init>(HttpsClient.java:207)
+	at java.base/sun.net.www.protocol.https.HttpsClient.New(HttpsClient.java:289)
+	at java.base/sun.net.www.protocol.https.AbstractDelegateHttpsURLConnection.getNewHttpClient(AbstractDelegateHttpsURLConnection.java:196)
+	at java.base/sun.net.www.protocol.http.HttpURLConnection.plainConnect0(HttpURLConnection.java:967)
+	at java.base/sun.net.www.protocol.http.HttpURLConnection.plainConnect(HttpURLConnection.java:903)
+	at java.base/sun.net.www.protocol.http.HttpURLConnection.connect(HttpURLConnection.java:876)
+	at java.base/sun.net.www.protocol.https.AbstractDelegateHttpsURLConnection.connect(AbstractDelegateHttpsURLConnection.java:181)
+	at java.base/sun.net.www.protocol.http.HttpURLConnection.getInputStream0(HttpURLConnection.java:1380)
+	at java.base/sun.net.www.protocol.http.HttpURLConnection.getInputStream(HttpURLConnection.java:1306)
+	at java.base/sun.net.www.protocol.https.HttpsURLConnectionImpl.getInputStream(HttpsURLConnectionImpl.java:223)
+	at org.gradle.wrapper.Install.forceFetch(SourceFile:2)
+	at org.gradle.wrapper.Install$1.call(SourceFile:8)
+	at org.gradle.wrapper.GradleWrapperMain.main(SourceFile:67)
+
+================================================================
+STEP 1 DONE: build failed offline with an empty cache (expected).
+Now turn internet ON, then run ./2-online-warm.sh
+================================================================
+[exit=0]
+
+##### STEP 2 (online) attempt 1
+=== STEP 2 (internet ON) ===
+Java:   openjdk version "25.0.5.1" 2026-11-17
+Gradle: 9.0.0 (from the project's wrapper)
+Internet detected: ON
+
+Downloading https://services.gradle.org/distributions/gradle-9.0.0-bin.zip
+............10%.............20%.............30%.............40%.............50%............60%.............70%.............80%.............90%.............100%
+
+Welcome to Gradle 9.0.0!
+
+Here are the highlights of this release:
+ - Configuration Cache is the recommended execution mode
+ - Gradle requires JVM 17 or higher to run
+ - Build scripts use Kotlin 2.2 and Groovy 4.0
+ - Improved Kotlin DSL script compilation avoidance
+
+For more details see https://docs.gradle.org/9.0.0/release-notes.html
+
+To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/9.0.0/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
+Daemon will be stopped at the end of the build 
+Calculating task graph as no cached configuration is available for tasks: clean build test
+> Task :app:clean UP-TO-DATE
+> Task :app:processTestResources NO-SOURCE
+> Task :app:processResources NO-SOURCE
+> Task :app:compileJava
+> Task :app:classes
+> Task :app:jar
+> Task :app:compileTestJava
+> Task :app:testClasses
+> Task :app:startScripts
+> Task :app:distTar
+> Task :app:distZip
+> Task :app:assemble
+> Task :app:test
+> Task :app:check
+> Task :app:build
+
+BUILD SUCCESSFUL in 48s
+8 actionable tasks: 7 executed, 1 up-to-date
+Configuration cache entry stored.
+
+================================================================
+STEP 2 DONE: build and test OK; cache filled.
+Now turn internet OFF, then run ./3-offline-verify.sh
+================================================================
+[exit=0]
+
+##### STEP 3 (offline)
+=== STEP 3 (internet OFF, cache filled) ===
+Java:   openjdk version "25.0.5.1" 2026-11-17
+Gradle: 9.0.0 (from the project's wrapper)
+Internet detected: OFF
+
+To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/9.0.0/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
+Daemon will be stopped at the end of the build 
+Calculating task graph as no cached configuration is available for tasks: clean build test
+> Task :app:clean UP-TO-DATE
+> Task :app:processResources NO-SOURCE
+> Task :app:processTestResources NO-SOURCE
+> Task :app:compileJava
+> Task :app:classes
+> Task :app:jar
+> Task :app:compileTestJava
+> Task :app:testClasses
+> Task :app:startScripts
+> Task :app:distTar
+> Task :app:distZip
+> Task :app:assemble
+> Task :app:test
+> Task :app:check
+> Task :app:build
+
+BUILD SUCCESSFUL in 6s
+8 actionable tasks: 7 executed, 1 up-to-date
+Configuration cache entry stored.
+
+================================================================
+STEP 3 PASSED: exam project builds and tests OFFLINE.
+================================================================
+[exit=0]
+
+##### TEST RESULTS
+testsuite name="library.LibraryManagerTest" tests="5" skipped="0" failures="0"
+testsuite name="library.LibraryControllerTest" tests="16" skipped="0" failures="0"
+testsuite name="org.example.AppTest" tests="1" skipped="0" failures="0"

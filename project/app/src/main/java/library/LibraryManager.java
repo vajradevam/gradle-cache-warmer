@@ -1,19 +1,32 @@
 package library;
 
 import java.io.IOException;
+import java.nio.file.Path;
+import java.time.Clock;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
 public class LibraryManager {
+    public static final int MAX_LOANS = 3;
+
     private ArrayList<LibraryItem> items;
     private ArrayList<Member> members;
     private ArrayList<IssueTransaction> transactions;
+    private final Path dataDir;
+    private final Clock clock;
 
     public LibraryManager() {
+        this(Path.of("."), Clock.systemDefaultZone());
+    }
+
+    /** Data files live in dataDir; clock supplies "today" (injectable for tests). */
+    public LibraryManager(Path dataDir, Clock clock) {
         items = new ArrayList<>();
         members = new ArrayList<>();
         transactions = new ArrayList<>();
+        this.dataDir = dataDir;
+        this.clock = clock;
     }
 
     public List<LibraryItem> getItems() { return items; }
@@ -21,66 +34,106 @@ public class LibraryManager {
     public List<IssueTransaction> getTransactions() { return transactions; }
 
     public boolean addItem(LibraryItem item) {
-        // TODO: Reject null items and duplicate resource IDs.
-        return false;
+        if (item == null || item.getItemId() == null
+                || item.getItemId().isBlank() || findItem(item.getItemId()) != null) {
+            return false;
+        }
+        items.add(item);
+        return true;
     }
 
     public boolean removeItem(String itemId) {
-        // TODO: Remove only if the resource exists and is not issued.
-        return false;
+        LibraryItem item = findItem(itemId);
+        if (item == null || item.isIssued()) {
+            return false;
+        }
+        return items.remove(item);
     }
 
     public LibraryItem findItem(String itemId) {
-        // TODO: Search by ID; return null if not found.
+        if (itemId == null) return null;
+        for (LibraryItem item : items) {
+            if (item.getItemId().equalsIgnoreCase(itemId.trim())) return item;
+        }
         return null;
     }
 
     public List<LibraryItem> searchByTitle(String keyword) {
-        // TODO: Case-insensitive partial title search.
-        return new ArrayList<>();
+        List<LibraryItem> result = new ArrayList<>();
+        if (keyword == null) return result;
+        String k = keyword.trim().toLowerCase();
+        for (LibraryItem item : items) {
+            if (item.getTitle().toLowerCase().contains(k)) result.add(item);
+        }
+        return result;
     }
 
     public boolean addMember(Member member) {
-        // TODO: Reject duplicate member IDs.
-        return false;
+        if (member == null || member.getMemberId() == null
+                || member.getMemberId().isBlank()
+                || findMember(member.getMemberId()) != null) {
+            return false;
+        }
+        members.add(member);
+        return true;
     }
 
     public Member findMember(String memberId) {
-        // TODO: Search by member ID.
+        if (memberId == null) return null;
+        for (Member m : members) {
+            if (m.getMemberId().equalsIgnoreCase(memberId.trim())) return m;
+        }
         return null;
     }
 
     public IssueTransaction issueItem(String memberId, String itemId) {
-        // TODO:
-        // 1. Validate member and resource.
-        // 2. Check resource availability.
-        // 3. Check member's active-loan limit (maximum 3).
-        // 4. Calculate due date using item.getLoanPeriod().
-        // 5. Create transaction and update resource status.
-        // 6. Return the transaction, or null if issue is rejected.
-        return null;
+        Member member = findMember(memberId);
+        LibraryItem item = findItem(itemId);
+        if (member == null || item == null || item.isIssued()
+                || countActiveLoans(member.getMemberId()) >= MAX_LOANS) {
+            return null;
+        }
+        LocalDate today = LocalDate.now(clock);
+        IssueTransaction tx = new IssueTransaction(
+                "T" + (transactions.size() + 1), member.getMemberId(),
+                item.getItemId(), today, today.plusDays(item.getLoanPeriod()));
+        transactions.add(tx);
+        item.setIssued(true);
+        return tx;
     }
 
     public double returnItem(String memberId, String itemId) {
-        // TODO:
-        // 1. Find the active transaction for this member and resource.
-        // 2. Mark it returned and update resource availability.
-        // 3. Return the fine amount.
-        // Return -1 if the return operation is invalid.
+        if (memberId == null || itemId == null) return -1;
+        for (IssueTransaction tx : transactions) {
+            if (!tx.isReturned()
+                    && tx.getMemberId().equalsIgnoreCase(memberId.trim())
+                    && tx.getResourceId().equalsIgnoreCase(itemId.trim())) {
+                tx.markReturned(LocalDate.now(clock));
+                LibraryItem item = findItem(itemId);
+                if (item != null) item.setIssued(false);
+                return tx.calculateFine();
+            }
+        }
         return -1;
     }
 
     public int countActiveLoans(String memberId) {
-        // TODO: Count transactions for this member that are not returned.
-        return 0;
+        int count = 0;
+        for (IssueTransaction tx : transactions) {
+            if (!tx.isReturned() && tx.getMemberId().equalsIgnoreCase(memberId)) count++;
+        }
+        return count;
     }
 
     public void saveAll() throws IOException {
-        // TODO: Persist all three collections using FileManager.
+        FileManager.saveResources(dataDir, items);
+        FileManager.saveMembers(dataDir, members);
+        FileManager.saveTransactions(dataDir, transactions);
     }
 
     public void loadAll() throws IOException, ClassNotFoundException {
-        // TODO: Load all three collections using FileManager.
-        // Missing files should result in empty collections.
+        items = FileManager.loadResources(dataDir);
+        members = FileManager.loadMembers(dataDir);
+        transactions = FileManager.loadTransactions(dataDir);
     }
 }

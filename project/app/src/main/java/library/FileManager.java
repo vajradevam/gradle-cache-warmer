@@ -1,6 +1,7 @@
 package library;
 
 import java.io.*;
+import java.nio.file.Path;
 import java.util.ArrayList;
 
 public class FileManager {
@@ -30,6 +31,37 @@ public class FileManager {
         }
     }
 
-    // TODO: Add methods to save/load resources, members and transactions
-    // using the filenames declared above.
+    private static String path(Path dir, String name) {
+        return dir.resolve(name).toString();
+    }
+
+    public static void saveResources(Path dir, ArrayList<LibraryItem> items)
+            throws IOException {
+        saveObject(path(dir, RESOURCE_FILE), items);
+    }
+
+    public static ArrayList<LibraryItem> loadResources(Path dir)
+            throws IOException, ClassNotFoundException {
+        return loadObject(path(dir, RESOURCE_FILE), new ArrayList<>());
+    }
+
+    public static void saveMembers(Path dir, ArrayList<Member> members)
+            throws IOException {
+        saveObject(path(dir, MEMBER_FILE), members);
+    }
+
+    public static ArrayList<Member> loadMembers(Path dir)
+            throws IOException, ClassNotFoundException {
+        return loadObject(path(dir, MEMBER_FILE), new ArrayList<>());
+    }
+
+    public static void saveTransactions(Path dir,
+            ArrayList<IssueTransaction> transactions) throws IOException {
+        saveObject(path(dir, TRANSACTION_FILE), transactions);
+    }
+
+    public static ArrayList<IssueTransaction> loadTransactions(Path dir)
+            throws IOException, ClassNotFoundException {
+        return loadObject(path(dir, TRANSACTION_FILE), new ArrayList<>());
+    }
 }
