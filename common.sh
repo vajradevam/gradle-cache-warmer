@@ -1,44 +1,38 @@
-# Shared helpers, sourced by warm-cache.sh and test-cache.sh.
-# Uses THIS machine's gradle and java, so the cache matches what students get
-# from `gradle init` here.
+#!/usr/bin/env bash
+# Shared helpers for the exam simulation. Sourced, not run.
+HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT="$HERE/project"
+GHOME="${GRADLE_USER_HOME:-$HOME/.gradle}"
 
-# Gradle version the exam projects are made with (wrapper pinned to this).
-PIN_GRADLE=9.0.0
-
-check_tools() {
-    command -v gradle >/dev/null || { echo "gradle not on PATH" >&2; exit 1; }
-    command -v java   >/dev/null || { echo "java not on PATH" >&2; exit 1; }
-    echo "== $(gradle --version | grep -E '^Gradle ')"
-    echo "== $(java -version 2>&1 | head -1)"
-    JAVA_MAJOR="$(java -version 2>&1 | sed -n '1s/.*"\([0-9]*\)[."].*/\1/p')"
+net_state() {
+  if curl -sI -m 6 -o /dev/null https://repo.maven.apache.org/maven2/ 2>/dev/null; then
+    echo ON
+  else
+    echo OFF
+  fi
 }
 
-# new_project <dir> <name> <app|lib> <sources-dir or ""> [plain]
-# With a 5th argument "plain", the generated project is left completely untouched.
-# Runs `gradle init` exactly like a student would, then overlays our sources.
-new_project() {
-    local dir="$1" name="$2" kind="$3" src="$4" plain="${5:-}" type sub
-    if [ "$kind" = app ]; then type=java-application; sub=app; else type=java-library; sub=lib; fi
-    mkdir -p "$dir"
-    ( cd "$dir" && gradle init --type "$type" --dsl kotlin --test-framework junit-jupiter \
-        --package demo --project-name "$name" --no-incubating \
-        --java-version "$JAVA_MAJOR" --use-defaults >/dev/null )
-    if [ -n "$src" ]; then
-        cp -r "$src"/. "$dir/$sub/src/"
-    fi
-    [ -n "$plain" ] && return 0
-    cat >> "$dir/$sub/build.gradle.kts" <<'EOK'
-
-apply(plugin = "jacoco")
-
-tasks.withType<Javadoc>().configureEach {
-    (options as StandardJavadocDocletOptions).addStringOption("Xdoclint:-missing", "-quiet")
-}
-
-tasks.named<Test>("test") {
-    testLogging {
-        events("passed", "failed", "skipped")
-    }
-}
-EOK
+# run_build <label>: use the PROJECT'S OWN wrapper (Gradle 9.0.0) and the
+# machine's Java 25 (toolchain), exactly like the exam. No --offline flag:
+# the exam machine just has no internet, so we do not hand Gradle any help.
+run_build() {
+  cd "$PROJECT" || exit 2
+  echo "Java:   $(java -version 2>&1 | head -1)"
+  echo "Gradle: $(grep distributionUrl gradle/wrapper/gradle-wrapper.properties | sed 's/.*gradle-//; s/-bin.zip//') (from the project's wrapper)"
+  echo "Internet detected: $(net_state)"
+  echo
+  local rc=0
+  ./gradlew --no-daemon --console=plain clean build test || rc=$?
+  if [ $rc -eq 0 ]; then
+    # 'gradlew run' does not forward stdin, and this app is a console menu,
+    # so install the app with Gradle and feed the menu through its start script.
+    ./gradlew --no-daemon --console=plain -q installDist || rc=$?
+  fi
+  if [ $rc -eq 0 ]; then
+    echo "--- run (menu input: 1 add samples, 2 list, 0 exit) ---"
+    local tmp; tmp="$(mktemp -d)"
+    ( cd "$tmp" && printf '1\n2\n0\n' | "$PROJECT/app/build/install/app/bin/app" ) || rc=$?
+    rm -rf "$tmp"
+  fi
+  return $rc
 }
