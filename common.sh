@@ -12,17 +12,25 @@ net_state() {
   fi
 }
 
-# run_build: use the MACHINE'S installed `gradle` (not ./gradlew) and Java 25,
-# because that is what students run in the exam. No --offline flag: the exam
-# machine just has no internet, so we do not hand Gradle any help.
+# run_build: test BOTH ways a student can build, because the exam zip has both:
+#   1) the machine's installed `gradle`
+#   2) the project's own ./gradlew (downloads the pinned Gradle, 9.0.0)
+# Both must pass. No --offline flag: the exam machine just has no internet.
 run_build() {
-  command -v gradle >/dev/null || { echo "ERROR: 'gradle' not found on PATH."; return 127; }
   cd "$PROJECT" || exit 2
   echo "Java:   $(java -version 2>&1 | head -1)"
-  echo "Gradle: $(gradle --version --no-daemon 2>/dev/null | grep -m1 '^Gradle') ($(readlink -f "$(command -v gradle)"))"
   echo "Internet detected: $(net_state)"
-  echo
-  local rc=0
-  gradle --no-daemon --console=plain clean build test || rc=$?
-  return $rc
+  local rc1=0 rc2=0
+  echo; echo "##### A) installed gradle #####"
+  if command -v gradle >/dev/null; then
+    echo "Gradle: $(gradle --version --no-daemon 2>/dev/null | grep -m1 '^Gradle') ($(readlink -f "$(command -v gradle)"))"
+    gradle --no-daemon --console=plain clean build test || rc1=$?
+  else
+    echo "ERROR: 'gradle' not found on PATH."; rc1=127
+  fi
+  echo; echo "##### B) project wrapper: ./gradlew #####"
+  echo "Wrapper pins: $(grep distributionUrl gradle/wrapper/gradle-wrapper.properties | sed 's/.*gradle-//; s/-bin.zip//')"
+  ./gradlew --no-daemon --console=plain clean build test || rc2=$?
+  echo; echo "RESULT: gradle=$([ $rc1 -eq 0 ] && echo PASS || echo FAIL)  ./gradlew=$([ $rc2 -eq 0 ] && echo PASS || echo FAIL)"
+  [ $rc1 -eq 0 ] && [ $rc2 -eq 0 ]
 }

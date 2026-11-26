@@ -9,9 +9,9 @@ fi
 if run_build; then
   echo
   echo "================================================================"
-  echo "STEP 2 DONE: build and test OK; cache filled."
+  echo "STEP 2 DONE: gradle AND ./gradlew build+test OK; cache filled."
   echo "Now turn internet OFF, then run ./3-offline-verify.sh"
   echo "================================================================"
 else
-  echo; echo "STEP 2 FAILED (check connection; re-run)."; exit 1
+  echo; echo "STEP 2 FAILED (check connection; wrapper download can time out; re-run)."; exit 1
 fi
