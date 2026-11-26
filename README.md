@@ -1,6 +1,6 @@
 # Exam simulation
 
-Checks that the exam project (Gradle 9.0.0, Java 25) builds and tests
+Checks that the exam project builds and tests
 offline. Run the steps in order. Each script tells you when to switch the internet.
 
 | # | Internet | Command | What it does |

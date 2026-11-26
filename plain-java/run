@@ -1,0 +1,38 @@
+#!/usr/bin/env bash
+# Plain javac/java build tool, like ./gradlew. No Gradle, no network, no cache.
+#   ./run build   compile main + tests into out/
+#   ./run test    build, then run all JUnit tests
+#   ./run run     build, then start the console app (interactive)
+#   ./run gui     build, then open the Swing GUI
+#   ./run clean   delete out/
+#   ./run all     build, test, and a scripted run of the app
+set -euo pipefail
+ROOT="$(cd "$(dirname "$0")" && pwd)"; cd "$ROOT"
+JUNIT=lib/junit-platform-console-standalone-1.12.1.jar
+
+build() {
+  rm -rf out && mkdir -p out/main out/test
+  javac -d out/main $(find src/main/java -name '*.java')
+  javac -cp "out/main:$JUNIT" -d out/test $(find src/test/java -name '*.java')
+  echo "BUILD OK"
+}
+tests() {
+  local rc=0
+  java -jar "$JUNIT" execute -cp "out/main:out/test" --scan-class-path --disable-banner --details=tree --disable-ansi-colors || rc=$?
+  [ $rc -eq 0 ] || { echo; echo "TEST FAILED (see Failures above: test name, message, file:line)"; exit 1; }
+}
+
+case "${1:-}" in
+  build) build ;;
+  test)  build; tests; echo "TEST OK" ;;
+  run)   build >/dev/null; mkdir -p data; cd data; java -cp ../out/main library.Main ;;
+  gui)   build >/dev/null; mkdir -p data; cd data; export _JAVA_AWT_WM_NONREPARENTING=1; java -cp ../out/main library.LibraryGUI ;;
+  clean) rm -rf out; echo "cleaned" ;;
+  all)
+    build; tests
+    tmp=$(mktemp -d); trap 'rm -rf "$tmp"' EXIT   # app saves .dat files in its cwd
+    echo "== scripted run =="
+    ( cd "$tmp" && printf '1\n2\n4\nM001\nB101\n6\n0\n' | java -cp "$ROOT/out/main" library.Main | tail -4 )
+    echo "ALL OK" ;;
+  *) sed -n '2,8p' "$0"; exit 1 ;;
+esac
